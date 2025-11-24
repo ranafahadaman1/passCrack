@@ -20,10 +20,6 @@ pip install -r requirements.txt
 
 Works with Python 3.6+.
 
-## Versions
-
-- **Main Project**: Uses standard `hashlib` for hashing.
-
 ## How to Run
 
 Run with `python password_cracker.py`. Use `hash` to hash passwords or `crack` to try cracking.
