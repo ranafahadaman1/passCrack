@@ -23,7 +23,6 @@ Works with Python 3.6+.
 ## Versions
 
 - **Main Project**: Uses standard `hashlib` for hashing.
-- **`manual_crypto/`**: Complete manual implementation using custom hash functions. See `manual_crypto/README.md` for details.
 
 ## How to Run
 
