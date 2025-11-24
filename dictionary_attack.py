@@ -5,6 +5,7 @@ from multiprocessing_utils import init_worker, found_password_event, hash_func
 
 def check_dictionary_chunk(password_chunk, target_hash):
     import multiprocessing_utils
+
     # Check a list of passwords against the hash
     if multiprocessing_utils.hash_func is None:
         return None
@@ -13,9 +14,13 @@ def check_dictionary_chunk(password_chunk, target_hash):
         if multiprocessing_utils.found_password_event.is_set():
             return None
 
-        if multiprocessing_utils.hash_func(password.encode('utf-8')).hexdigest() == target_hash:
+        if (
+            multiprocessing_utils.hash_func(password.encode("utf-8")).hexdigest()
+            == target_hash
+        ):
             multiprocessing_utils.found_password_event.set()
             return password
+
     return None
 
 
@@ -26,7 +31,7 @@ def dictionary_attack(target_hash, algorithm, wordlist_path, num_processes):
     start_time = time.time()
 
     try:
-        with open(wordlist_path, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(wordlist_path, "r", encoding="utf-8", errors="ignore") as f:
             words = [line.strip() for line in f]
     except FileNotFoundError:
         print(f"Error: Wordlist file not found at '{wordlist_path}'")
@@ -41,26 +46,27 @@ def dictionary_attack(target_hash, algorithm, wordlist_path, num_processes):
 
     # Split into chunks
     chunk_size = (len(words) + num_processes - 1) // num_processes
-    password_chunks = [words[i:i + chunk_size] for i in range(0, len(words), chunk_size)]
-
-    tasks = [(chunk, target_hash) for chunk in password_chunks]
+    password_chunks = [
+        words[i : i + chunk_size] for i in range(0, len(words), chunk_size)
+    ]
+    print(f"Total passwords: {len(words)}")
 
     found = None
-    with Manager() as manager, Pool(processes=num_processes, initializer=init_worker, initargs=(manager.Event(), algorithm)) as pool:
-        results = pool.starmap_async(check_dictionary_chunk, tasks)
+    with Manager() as manager:
+        with Pool(
+            processes=num_processes,
+            initializer=init_worker,
+            initargs=(manager.Event(), algorithm),
+        ) as pool:
+            # Start tasks
+            tasks = [(chunk, target_hash) for chunk in password_chunks]
+            results = pool.starmap(check_dictionary_chunk, tasks)
 
-        try:
-            for result in results.get():
+            # Check for found password
+            for result in results:
                 if result:
                     found = result
-                    pool.terminate()
-                    pool.join()
                     break
-        except KeyboardInterrupt:
-            print("\nDictionary attack interrupted.")
-            pool.terminate()
-            pool.join()
-            return None
 
     end_time = time.time()
     total_time = end_time - start_time

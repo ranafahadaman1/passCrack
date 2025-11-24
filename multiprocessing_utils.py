@@ -5,6 +5,7 @@ from multiprocessing import Event
 found_password_event = None
 hash_func = None
 
+
 def init_worker(event, algorithm):
     # Set up the worker
     global found_password_event, hash_func
